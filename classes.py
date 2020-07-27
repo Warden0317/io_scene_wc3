@@ -14,16 +14,20 @@ class Version:
 class Model:
     def __init__(self):
         self.Name = ""
-        self.NumGeosets = 0
-        self.NumGeosetAnims = 0
-        self.NumBones = 0
-        self.NumAttachments = 0
-        self.NumParticleEmittersPopcorn = 0
-        self.NumEvents = 0
-        self.NumFaceFX = 0
-        self.BlendTime = 0
-        self.MinimumExtent = []
-        self.MaximumExtent = []
+        self.Version = Version()
+        self.Geosets = []
+        # self.NumGeosets = 0
+        # self.NumGeosetAnims = 0
+        self.Bones = []
+        self.PivotPoints = PivotPoints()
+        # self.NumBones = 0
+        # self.NumAttachments = 0
+        # self.NumParticleEmittersPopcorn = 0
+        # self.NumEvents = 0
+        # self.NumFaceFX = 0
+        # self.BlendTime = 0
+        # self.MinimumExtent = []
+        # self.MaximumExtent = []
     def read(self,file,name):
         self.Name = name.strip("\"")
         line = file.readline()
@@ -264,7 +268,7 @@ class Bone:
                     pass
             line = file.readline()
     def write(self,file):
-        file.write("Bone \"%s\" {\n" % self.Name)
+        file.write("Bone \"%s\" {\n" % self.Name[-3:])
         file.write("\tObjectId %d,\n" % self.ObjectId)
         if self.Parent != -1:
             file.write("\tParent %d,\n" % self.Parent)
@@ -276,6 +280,7 @@ class Bone:
         # Translation
         if len(self.Translation):
             file.write("\tTranslation %d {\n\t\tLinear,\n" % len(self.Translation))
+            file.write("\t\t0: { 0, 0, 0 },\n")
             for k,v in self.Translation.items():
                 file.write("\t\t%s: { %.6f, %.6f, %.6f },\n" % (k,v[0],v[1],v[2]))
             file.write("\t}\n")

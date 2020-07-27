@@ -19,15 +19,15 @@ from bpy_extras.io_utils import ExportHelper
 
 from mathutils import (Vector,Quaternion)
 from . import importer
-from . import model
+from .classes import (Version,Model,Bone,Textures,Materials)
 from . import mdl
 from . import mdx
 
 def loadarmature(armature, bones, pivotpoints):
     ms2fps = bpy.context.scene.render.fps / 1000
-    for index,b in enumerate(armature.pose.bones):
-        bone = model.Bone()
-        bone.ObjectId = index
+    for b in armature.pose.bones:
+        bone = Bone()
+        bone.ObjectId = len(bones)
         bone.Name = b.name
         if b.parent:
             bone.ParentName = b.parent.name
@@ -36,9 +36,6 @@ def loadarmature(armature, bones, pivotpoints):
         pivotpoints.Location.append(list(armature.matrix_world @ b.bone.head_local))
         # pivotpoints.Location.append(list(b.bone.head_local))
 
-    for bone in bones:
-        if bone.ParentName:
-            bone.Parent = list(filter(lambda b: b.Name == bone.ParentName, bones))[0].ObjectId
 
     if armature.animation_data:
         fcurves = armature.animation_data.action.fcurves
@@ -85,19 +82,6 @@ def loadarmature(armature, bones, pivotpoints):
                         #     bone.Scaling[str(round(keyframe.co[0]/ms2fps))][2] = keyframe.co[1]
                         # else:
                         #     bone.Scaling[str(round(keyframe.co[0]/ms2fps))][1] = -keyframe.co[1]
-    
-    for bone in bones:
-        for k,frame in bone.Translation.items():
-            bone.Translation[k] = list(armature.matrix_world @ Vector(frame))
-        for k,frame in bone.Rotation.items():
-            
-            axis, angle = Quaternion(frame).to_axis_angle()
-            axis.rotate(armature.matrix_world)
-            quat = Quaternion(axis, angle)
-            quat.normalize()
-
- 
-            bone.Rotation[k] = [quat[1],quat[2],quat[3],quat[0]]
     
 
 class Classic_MDL_import(bpy.types.Operator, ImportHelper):
@@ -146,15 +130,16 @@ class Reforged_import(bpy.types.Operator, ImportHelper):
         print("Import", self.properties.filepath)
 
         
-
+        model = Model()
         if(self.properties.filepath[-3:] == "mdx"):
             file = open(self.properties.filepath, 'rb+')
-            mdx.mdxReadClassic(file)
+            # mdx.mdxReadClassic(file)
+            mdx.mdxReadReforged(file,model)
             return {'FINISHED'}
         file = open(self.properties.filepath, 'r')
 
         version = mdl.Version()
-        model = mdl.Model()
+        model = Model()
         sequences = mdl.Sequences()
         texture = mdl.Textures()
         material = mdl.Materials()
@@ -342,13 +327,13 @@ class Classic_MDL_export(bpy.types.Operator, ExportHelper):
 
         
 
-        version = mdl.Version()
-        model = mdl.Model()
-        texture = mdl.Textures()
-        material = mdl.Materials()
+        version = Version()
+        model = Model()
+        texture = Textures()
+        material = Materials()
         geosets = []
         bones = []
-        pivotpoints = mdl.PivotPoints()
+        pivotpoints = model.PivotPoints()
         meshcount = 0
 
         file = open(self.properties.filepath, 'w')
@@ -358,16 +343,16 @@ class Classic_MDL_export(bpy.types.Operator, ExportHelper):
                 # mesh =  bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph), preserve_all_data_layers=True, depsgraph=depsgraph)
                 mesh = obj.data
                 mesh.transform(obj.matrix_world)
-                geoset = mdl.Geoset()
+                geoset = model.Geoset()
                 mesh.calc_loop_triangles()
 
-                armature = None
+                armatures = []
                 for modifier in obj.modifiers:
                     if modifier.type == 'ARMATURE' and modifier.use_vertex_groups:
-                        armature = modifier.object
+                        armatures.append(modifier.object)
 
-                if armature is not None:
-                    loadarmature(armature,bones,pivotpoints)
+                for armature in armatures:
+                    loadarmature(armature,bones,pivotpoints)                    
                     
                 #     bone_names = set(b.name for b in armature.object.data.bones)
 
@@ -378,6 +363,8 @@ class Classic_MDL_export(bpy.types.Operator, ExportHelper):
                     vgroups = sorted(vertex.groups[:], key=lambda x:x.weight, reverse=True)
                     if len(vgroups):
                         group = list(list(filter(lambda b: b.Name == obj.vertex_groups[vg.group].name, bones))[0].ObjectId for vg in vgroups if vg.weight > 0.25)[:3]
+                    else:
+                        group = [0]
                     if group not in geoset.Groups:
                         geoset.Groups.append(group)
                     
@@ -406,6 +393,16 @@ class Classic_MDL_export(bpy.types.Operator, ExportHelper):
         for geoset in geosets:
             geoset.write(file)
         for bone in bones:
+            if bone.ParentName:
+                bone.Parent = list(filter(lambda b: b.Name == bone.ParentName, bones))[0].ObjectId
+            for k,frame in bone.Translation.items():
+                bone.Translation[k] = list(armature.matrix_world @ Vector(frame))
+            for k,frame in bone.Rotation.items():
+                axis, angle = Quaternion(frame).to_axis_angle()
+                axis.rotate(armature.matrix_world)
+                quat = Quaternion(axis, angle)
+                quat.normalize()
+                bone.Rotation[k] = [quat[1],quat[2],quat[3],quat[0]]
             bone.write(file)
         pivotpoints.write(file)
         return {'FINISHED'}

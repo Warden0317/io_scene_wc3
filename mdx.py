@@ -1,5 +1,11 @@
-from . import model
+
 from struct import pack, unpack
+from .classes import (Model,Bone,Geoset)
+def readint(file,length):
+    return int.from_bytes(file.read(length),'little')
+
+def readfloat(file):
+    return 1
 
 def mdxReadClassic(file):
     magic = file.read(4)
@@ -25,7 +31,6 @@ def mdxReadClassic(file):
             start = file.tell()
             while file.tell()-start<length:
                 length_sub = int.from_bytes(file.read(4),'little')
-                print(length_sub)
                 start_sub = file.tell()
                 while file.tell()-start_sub < length_sub-4:
                     label_g = file.read(4).decode()
@@ -61,7 +66,6 @@ def mdxReadClassic(file):
                         par = int.from_bytes(file.read(4),'little')
                         for i in range(par):
                             file.read(8)
-                        print('uv' + str(file.tell()))
         elif label == "BONE":
             start = file.tell()
             while file.tell()-start<length:
@@ -95,3 +99,102 @@ def mdxReadClassic(file):
         #pivt
         #evts
         #clid
+
+
+def mdxReadReforged(file,model):
+    magic = file.read(4)
+    label = file.read(4).decode()
+    while label:
+        length = int.from_bytes(file.read(4),'little')
+        if label == "VERS":
+            version = model.Version
+            version.FormatVersion = file.read(length)
+        elif label == "MODL":
+            file.read(length)
+        elif label == "SEQS":
+            file.read(length)
+        elif label == "MTLS":
+            file.read(length)
+        elif label == "TEXS":
+            file.read(length)
+        elif label == "GEOS":
+            start = file.tell()
+            while file.tell()-start<length:
+                geoset = Model.Geoset()
+                start_sub = file.tell()
+                length_sub = readint(file,4)
+                while file.tell()-start_sub < length_sub:
+                    label_g = file.read(4).decode()
+                    if label_g == "VRTX":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(12)
+                    elif label_g == "NRMS":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(12)
+                    elif label_g == "PTYP":
+                        file.read(24)
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(2)
+                    elif label_g == "GNDX":
+                        file.read(4)
+                    elif label_g == "MTGC":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(4)
+                    elif label_g == "MATS":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(4)
+                        file.read(128)
+                    elif label_g == "TANG":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(16)
+                    elif label_g == "SKIN":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(1)
+                    elif label_g == "UVAS":
+                        file.read(8)
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(8)
+        # elif label == "BONE":
+        #     start = file.tell()
+        #     while file.tell()-start<length:
+        #         bone = model.Bone()
+        #         length_sub = readint(file,4)
+        #         name = file.read(80)
+        #         obid = file.read(4)
+        #         parent = file.read(4)
+        #         file.read(4)
+        #         if file.read(4) == "KGTR":
+        #             par1 = readint(file,4)
+        #             file.read(8)
+        #             for i in range(par1):
+        #                 file.read(16)
+        #         elif file.read(4) == "KGRT":
+        #             par1 = readint(file,4)
+        #             file.read(8)
+        #             for i in range(par1):
+        #                 file.read(20)
+        #         file.read(8)
+
+        elif label == "PIVT":
+            num = int(length/12)
+            for i in range(num):
+                file.read(12)
+        else:
+            file.read(length)
+        label = file.read(4).decode()
+
+#GEOA
+#ATCH
+#CAMS
+#EVTS
+#CLID
+#FAFX
+#BPOS
