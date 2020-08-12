@@ -135,11 +135,11 @@ class Reforged_import(bpy.types.Operator, ImportHelper):
             file = open(self.properties.filepath, 'rb+')
             # mdx.mdxReadClassic(file)
             mdx.mdxReadReforged(file,model)
+            importer.ReforgedImport(model)
             return {'FINISHED'}
         file = open(self.properties.filepath, 'r')
 
         version = mdl.Version()
-        model = Model()
         sequences = mdl.Sequences()
         texture = mdl.Textures()
         material = mdl.Materials()

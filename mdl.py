@@ -1,4 +1,4 @@
-from . import model
+from . import classes
 
 def mdlreadClassic(file):
     version = model.Version()

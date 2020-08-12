@@ -108,7 +108,7 @@ def mdxReadReforged(file,model):
         length = int.from_bytes(file.read(4),'little')
         if label == "VERS":
             version = model.Version
-            version.FormatVersion = file.read(length)
+            version.FormatVersion = readint(file,length)
         elif label == "MODL":
             file.read(length)
         elif label == "SEQS":
@@ -120,7 +120,7 @@ def mdxReadReforged(file,model):
         elif label == "GEOS":
             start = file.tell()
             while file.tell()-start<length:
-                geoset = Model.Geoset()
+                geoset = Geoset()
                 start_sub = file.tell()
                 length_sub = readint(file,4)
                 while file.tell()-start_sub < length_sub:
@@ -128,16 +128,16 @@ def mdxReadReforged(file,model):
                     if label_g == "VRTX":
                         par = readint(file,4)
                         for i in range(par):
-                            file.read(12)
+                            geoset.Vertices.append(list(unpack('f'*3,file.read(12))))
                     elif label_g == "NRMS":
                         par = readint(file,4)
                         for i in range(par):
-                            file.read(12)
+                            geoset.Normals.append(list(unpack('f'*3,file.read(12))))
                     elif label_g == "PTYP":
                         file.read(24)
                         par = readint(file,4)
-                        for i in range(par):
-                            file.read(2)
+                        for i in range(int(par/3)):
+                            geoset.Faces.append(list(unpack('H'*3,file.read(6))))
                     elif label_g == "GNDX":
                         file.read(4)
                     elif label_g == "MTGC":
@@ -148,45 +148,58 @@ def mdxReadReforged(file,model):
                         par = readint(file,4)
                         for i in range(par):
                             file.read(4)
-                        file.read(128)
+                        file.read(12)
+                        geoset.LevelOfDetail = readint(file,4)
+                        geoset.Name = file.read(112).decode().strip().strip(b'\x00'.decode())
                     elif label_g == "TANG":
                         par = readint(file,4)
                         for i in range(par):
                             file.read(16)
                     elif label_g == "SKIN":
                         par = readint(file,4)
-                        for i in range(par):
-                            file.read(1)
+                        for i in range(int(par/8)):
+                            geoset.SkinWeights.append(list(unpack('B'*8,file.read(8))))
                     elif label_g == "UVAS":
                         file.read(8)
                         par = readint(file,4)
                         for i in range(par):
                             file.read(8)
-        # elif label == "BONE":
-        #     start = file.tell()
-        #     while file.tell()-start<length:
-        #         bone = model.Bone()
-        #         length_sub = readint(file,4)
-        #         name = file.read(80)
-        #         obid = file.read(4)
-        #         parent = file.read(4)
-        #         file.read(4)
-        #         if file.read(4) == "KGTR":
-        #             par1 = readint(file,4)
-        #             file.read(8)
-        #             for i in range(par1):
-        #                 file.read(16)
-        #         elif file.read(4) == "KGRT":
-        #             par1 = readint(file,4)
-        #             file.read(8)
-        #             for i in range(par1):
-        #                 file.read(20)
-        #         file.read(8)
+                # print(geoset.LevelOfDetail)
+                model.Geosets.append(geoset)
+        elif label == "BONE":
+            start = file.tell()
+            while file.tell()-start<length:
+                bone = Bone()
+                start_sub = file.tell()
+                length_sub = readint(file,4)
+                bone.Name = file.read(80).decode().strip().strip(b'\x00'.decode())
+                bone.ObjectId = readint(file,4)
+                bone.Parent = readint(file,4)
+                file.read(4)
+                while file.tell()-start_sub < length_sub-8:
+                    label_b = file.read(4).decode()
+                    if label_b == "KGTR":             #Translation
+                        par1 = readint(file,4)
+                        file.read(8)
+                        for i in range(par1):
+                            bone.Translation.update({readint(file,4):list(unpack('f'*3,file.read(12)))})
+                    elif label_b == "KGRT":           #Rotation
+                        par1 = readint(file,4)
+                        file.read(8)
+                        for i in range(par1):
+                            bone.Rotation.update({readint(file,4):list(unpack('f'*4,file.read(16)))})
+                    elif label_b == "KGSC":
+                        par1 = readint(file,4)
+                        file.read(8)
+                        for i in range(par1):
+                            bone.Scaling.update({readint(file,4):list(unpack('f'*3,file.read(12)))})
+                file.read(8)
+                model.Bones.append(bone)
 
         elif label == "PIVT":
             num = int(length/12)
             for i in range(num):
-                file.read(12)
+                model.PivotPoints.Location.append(list(unpack('f'*3,file.read(12))))
         else:
             file.read(length)
         label = file.read(4).decode()
