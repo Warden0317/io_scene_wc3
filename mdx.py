@@ -200,6 +200,14 @@ def mdxReadReforged(file,model):
             num = int(length/12)
             for i in range(num):
                 model.PivotPoints.Location.append(list(unpack('f'*3,file.read(12))))
+        elif label == "CAMS":
+            length_sub = readint(file,4)
+            model.Camera.Name = file.read(80).decode().strip().strip(b'\x00'.decode())
+            model.Camera.Position = list(unpack('f'*3,file.read(12)))
+            model.Camera.FieldOfView = unpack('f',file.read(4))[0]
+            model.Camera.FarClip = unpack('f',file.read(4))[0]
+            model.Camera.NearClip = unpack('f',file.read(4))[0]
+            model.Camera.Target = list(unpack('f'*3,file.read(12)))
         else:
             file.read(length)
         label = file.read(4).decode()

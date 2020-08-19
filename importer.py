@@ -1,5 +1,5 @@
 import bpy
-from mathutils import Matrix
+from mathutils import (Vector,Matrix)
 
 def ReforgedImport(model):
     armature = bpy.data.armatures.new(name="Armature")
@@ -8,7 +8,7 @@ def ReforgedImport(model):
     ms2fps = bpy.context.scene.render.fps / 1000
 
     armatureObject = bpy.data.objects.new("Armature", armature)
-    armatureObject.matrix_world = Matrix(((0.02, 0.0, 0.0, 0.0),(0.0, 0.02, 0.0, 0.0),(0.0, 0.0, 0.02, 0.0),(0.0, 0.0, 0.0, 1.0)))
+    armatureObject.matrix_world = Matrix(((0.05, 0.0, 0.0, 0.0),(0.0, 0.05, 0.0, 0.0),(0.0, 0.0, 0.05, 0.0),(0.0, 0.0, 0.0, 1.0)))
     armatureObject.location = bpy.context.scene.cursor.location
 
     bpy.context.scene.collection.objects.link(armatureObject)
@@ -111,6 +111,18 @@ def ReforgedImport(model):
     armatureObject.animation_data_create()
     armatureObject.animation_data.action = action
 
+    camera = bpy.data.cameras.new(model.Camera.Name)
+    camera.angle = model.Camera.FieldOfView
+    camera.clip_end = model.Camera.FarClip/10
+    camera.clip_start = model.Camera.NearClip/10
+    cameraObject = bpy.data.objects.new(model.Camera.Name, camera)
+    position = model.Camera.Position
+    target = model.Camera.Target
+    cameraObject.location = Vector(position)/20
+    cameraObject.rotation_euler = (Vector(target)-Vector(position)).to_track_quat('-Z', 'Y').to_euler()
+
+    bpy.context.scene.collection.objects.link(cameraObject)
+
     for index,geoset in enumerate(model.Geosets):
         if(geoset.LevelOfDetail == 0):
             mesh = bpy.data.meshes.new(geoset.Name)
@@ -127,7 +139,7 @@ def ReforgedImport(model):
             # uvLayer.data.foreach_set('uv',per_loop_list)
 
             meshObject = bpy.data.objects.new(geoset.Name, mesh)
-            meshObject.matrix_world = Matrix(((0.02, 0.0, 0.0, 0.0),(0.0, 0.02, 0.0, 0.0),(0.0, 0.0, 0.02, 0.0),(0.0, 0.0, 0.0, 1.0)))
+            meshObject.matrix_world = Matrix(((0.05, 0.0, 0.0, 0.0),(0.0, 0.05, 0.0, 0.0),(0.0, 0.0, 0.05, 0.0),(0.0, 0.0, 0.0, 1.0)))
 
             vertexGroups = []
 

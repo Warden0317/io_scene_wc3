@@ -20,6 +20,7 @@ class Model:
         # self.NumGeosetAnims = 0
         self.Bones = []
         self.PivotPoints = PivotPoints()
+        self.Camera = Camera()
         # self.NumBones = 0
         # self.NumAttachments = 0
         # self.NumParticleEmittersPopcorn = 0
@@ -297,6 +298,15 @@ class Bone:
                 file.write("\t\t%s: { %.6f, %.6f, %.6f },\n" % (k,v[0],v[1],v[2]))
             file.write("\t}\n")
         file.write("}\n")
+
+class Camera:
+    def __init__(self):
+        self.Name = ""
+        self.Position = []
+        self.FieldOfView = 0.0
+        self.FarClip = 10000
+        self.NearClip = 0.1
+        self.Target = []
 
 class PivotPoints:
     def __init__(self):
