@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "mdx_tools",
+    "name": "Warcraft 3 MDX/MDL format",
     "author": "Warden",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
@@ -84,7 +84,7 @@ def loadarmature(armature, bones, pivotpoints):
                         #     bone.Scaling[str(round(keyframe.co[0]/ms2fps))][1] = -keyframe.co[1]
     
 
-class Classic_MDL_import(bpy.types.Operator, ImportHelper):
+class Classic_import(bpy.types.Operator, ImportHelper):
     bl_idname = "classicmdl.import"
     bl_label = "Import mdl"
 
@@ -103,8 +103,9 @@ class Classic_MDL_import(bpy.types.Operator, ImportHelper):
         return {'FINISHED'}
 
 class Reforged_import(bpy.types.Operator, ImportHelper):
-    bl_idname = "reforgedmdl.import"
-    bl_label = "Import mdl"
+    bl_idname = "reforged.import"
+    bl_label = "Import reforged model"
+
     filter_glob : StringProperty(
         default="*.mdl;*.mdx",
         options={'HIDDEN'},
@@ -135,7 +136,7 @@ class Reforged_import(bpy.types.Operator, ImportHelper):
             file = open(self.properties.filepath, 'rb+')
             # mdx.mdxReadClassic(file)
             mdx.mdxReadReforged(file,model)
-            importer.ReforgedImport(model)
+            importer.ReforgedImport(model,self.LOD)
             return {'FINISHED'}
         file = open(self.properties.filepath, 'r')
 
@@ -315,7 +316,7 @@ class Reforged_import(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
-class Classic_MDL_export(bpy.types.Operator, ExportHelper):
+class Classic_export(bpy.types.Operator, ExportHelper):
     bl_idname = "classicmdl.export"
     bl_label = "Export mdl"
     filename_ext = ".mdl"
@@ -407,7 +408,7 @@ class Classic_MDL_export(bpy.types.Operator, ExportHelper):
         pivotpoints.write(file)
         return {'FINISHED'}
 
-class Reforged_MDL_export(bpy.types.Operator, ExportHelper):
+class Reforged_export(bpy.types.Operator, ExportHelper):
     bl_idname = "reforgedmdl.export"
     bl_label = "Export mdl"
     filename_ext = ".mdl"
@@ -500,17 +501,17 @@ class Reforged_MDL_export(bpy.types.Operator, ExportHelper):
 
 
 classes = {
-    Classic_MDL_import,
+    Classic_import,
     Reforged_import,
-    Classic_MDL_export,
-    Reforged_MDL_export,
+    Classic_export,
+    Reforged_export,
 }
 
 def classic_mdl_import(self, context):
     self.layout.operator("classicmdl.import", text="War3 Classic mdl (.mdl)")
 
-def reforged_mdl_import(self, context):
-    self.layout.operator("reforgedmdl.import", text="War3 Reforged mdl (.mdl)")
+def reforged_import(self, context):
+    self.layout.operator("reforged.import", text="War3 Reforged (.mdl/.mdx)")
 
 def classic_mdl_export(self, context):
     self.layout.operator("classicmdl.export", text="War3 Classic mdl (.mdl)")
@@ -522,7 +523,7 @@ def register():
     for c in classes: 
         bpy.utils.register_class(c)
     bpy.types.TOPBAR_MT_file_import.append(classic_mdl_import)
-    bpy.types.TOPBAR_MT_file_import.append(reforged_mdl_import)
+    bpy.types.TOPBAR_MT_file_import.append(reforged_import)
     bpy.types.TOPBAR_MT_file_export.append(classic_mdl_export)
     bpy.types.TOPBAR_MT_file_export.append(reforged_mdl_export)
 
@@ -530,7 +531,7 @@ def unregister():
     for c in classes: 
         bpy.utils.unregister_class(c)
     bpy.types.TOPBAR_MT_file_import.remove(classic_mdl_import)
-    bpy.types.TOPBAR_MT_file_import.remove(reforged_mdl_import)
+    bpy.types.TOPBAR_MT_file_import.remove(reforged_import)
     bpy.types.TOPBAR_MT_file_export.remove(classic_mdl_export)
     bpy.types.TOPBAR_MT_file_export.remove(reforged_mdl_export)
 
