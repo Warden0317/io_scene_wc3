@@ -1,7 +1,7 @@
 import bpy
 from mathutils import (Vector,Matrix)
 
-def ReforgedImport(model):
+def ReforgedImport(model,lod):
     armature = bpy.data.armatures.new(name="Armature")
     action = bpy.data.actions.new(name="action")
 
@@ -32,21 +32,21 @@ def ReforgedImport(model):
                     fcurve.keyframe_points.add(count = len(bone.Translation))
                     j = 0
                     for k,v in bone.Translation.items():
-                        fcurve.keyframe_points[j].co = (int(k)*ms2fps,v[0]/20)
+                        fcurve.keyframe_points[j].co = (int(k)*ms2fps,v[0])
                         j += 1
                 elif i == 1:
                     fcurve = action.fcurves.new(datapath,index = 1,action_group = bone.Name)
                     fcurve.keyframe_points.add(count = len(bone.Translation))
                     j = 0
                     for k,v in bone.Translation.items():
-                        fcurve.keyframe_points[j].co = (int(k)*ms2fps,v[2]/20)
+                        fcurve.keyframe_points[j].co = (int(k)*ms2fps,v[2])
                         j += 1
                 else:
                     fcurve = action.fcurves.new(datapath,index = 2,action_group = bone.Name)
                     fcurve.keyframe_points.add(count = len(bone.Translation))
                     j = 0
                     for k,v in bone.Translation.items():
-                        fcurve.keyframe_points[j].co = (int(k)*ms2fps,-v[1]/20)
+                        fcurve.keyframe_points[j].co = (int(k)*ms2fps,-v[1])
                         j += 1
                         
         if(bone.Rotation):
@@ -124,7 +124,7 @@ def ReforgedImport(model):
     bpy.context.scene.collection.objects.link(cameraObject)
 
     for index,geoset in enumerate(model.Geosets):
-        if(geoset.LevelOfDetail == 0):
+        if(geoset.LevelOfDetail == lod):
             mesh = bpy.data.meshes.new(geoset.Name)
             mesh.from_pydata(geoset.Vertices, [], geoset.Faces)
             for index2,vertex in enumerate(mesh.vertices):
