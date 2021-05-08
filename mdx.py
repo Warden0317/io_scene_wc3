@@ -159,6 +159,10 @@ def mdxReadReforged(file,model):
                         par = readint(file,4)
                         for i in range(int(par/8)):
                             geoset.SkinWeights.append(list(unpack('B'*8,file.read(8))))
+                    elif label_g == "UVBS":
+                        par = readint(file,4)
+                        for i in range(par):
+                            file.read(8)
                     elif label_g == "UVAS":
                         file.read(8)
                         par = readint(file,4)
@@ -208,6 +212,12 @@ def mdxReadReforged(file,model):
             model.Camera.FarClip = unpack('f',file.read(4))[0]
             model.Camera.NearClip = unpack('f',file.read(4))[0]
             model.Camera.Target = list(unpack('f'*3,file.read(12)))
+        elif label == "KCTR":
+            file.read(8)
+            file.read(length*16)
+        elif label == "KTTR":
+            file.read(8)
+            file.read(length*16)
         else:
             file.read(length)
         label = file.read(4).decode()

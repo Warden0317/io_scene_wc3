@@ -3,7 +3,7 @@ bl_info = {
     "author": "Warden",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
-    "location": "",
+    "location": "File > Import/Export",
     "description": "Warcraft 3: Reforged mdx import/export tools",
     "wiki_url": "https://github.com/Warden0317/mdx_tools/blob/master/README.md",
     "tracker_url": "https://github.com/Warden0317/mdx_tools/issues",
